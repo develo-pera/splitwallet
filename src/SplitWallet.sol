@@ -43,8 +43,6 @@ contract SplitWallet {
     // Make it payable so we can send ERC20 tokens to it. Use ERC20.transferFrom to send tokens to this contract.
     // @dev v2 use account abstraction in order to avoind users having to approve this contract to spend their tokens
     function repayDebt(uint256 _debtsGroupId) public {
-        require(debtsGroup[_debtsGroupId].length > 0, "No debts found for this group");
-
         Debt[] storage s_debts = debtsGroup[_debtsGroupId];
 
         for (uint256 i = 0; i < s_debts.length; i++) {

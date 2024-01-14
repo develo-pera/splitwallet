@@ -46,4 +46,14 @@ contract SplitWalletTest is Test {
             }
         }
     }
+
+    function test_RepayDebt_WhenCallerNotInDebtorsList() public {
+       address[] memory testDebtorsArray = new address[](1);
+        testDebtorsArray[0] = address(0x123);
+        uint256 testAmount = 100;
+
+        uint256 groupId = splitWallet.createDebtGroup(testDebtorsArray, testAmount);
+        vm.expectRevert("No debt found for this debtor");
+        splitWallet.repayDebt(groupId); 
+    }
 }
