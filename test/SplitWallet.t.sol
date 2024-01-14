@@ -16,34 +16,34 @@ contract SplitWalletTest is Test {
         testDebtorsArray[0] = address(0x123);
         uint256 testAmount = 100;
 
-        (uint256 debtsGroupId) = splitWallet.createDebtGroup(testDebtorsArray, testAmount);
+        uint256 debtsGroupId = splitWallet.createDebtGroup(testDebtorsArray, testAmount);
 
-        (uint256 amount, address creditor, address debtor , bool paid,) = splitWallet.debtsGroup(debtsGroupId, 0);
+        SplitWallet.Debt[] memory debts = splitWallet.getGroupDebts(debtsGroupId);
+        assertEq(debts.length, 1);
 
-        assertEq(testAmount, amount);
-        assertEq(address(this), creditor);
-        assertEq(testDebtorsArray[0], debtor);
-        assertEq(false, paid);
+        assertEq(debts[0].debtor, testDebtorsArray[0]);
+        assertEq(debts[0].amount, testAmount);
+        assertEq(debts[0].paid, false);
+        assertEq(debts[0].creditor, address(this));
     }
 
     function test_RepayDebt() public {
-        // address[] memory testDebtorAddreses = [0x123];
-        // uint256 testAmount = 100;
+        address[] memory testDebtorsArray = new address[](1);
+        testDebtorsArray[0] = address(this);
+        uint256 testAmount = 100;
 
-        // (uint256 groupId,) = splitWallet.createDebtGroup(testDebtorAddreses, testAmount);
-        // splitWallet.repayDebt(groupId);
-        // SplitWallet.Debt[] storage debts = splitWallet.debtsGroup(groupId);
-        
-        // for (uint256 i = 0; i < debts.length; i++) {
-        //     if (debts[i].debtor == msg.sender) {
-        //         assertEq(true, debts[i].paid);
-        //         return;
-        //     }
-        // }
+        uint256 groupId = splitWallet.createDebtGroup(testDebtorsArray, testAmount);
+        splitWallet.repayDebt(groupId);
+        SplitWallet.Debt[] memory debts = splitWallet.getGroupDebts(groupId);
+        assertEq(debts.length, 1);
 
-        // assertEq(testAmount, amount);
-        // assertEq(address(this), creditor);
-        // assertEq(testDebtor, debtor);
-        // assertEq(true, paid);
+        for (uint256 i = 0; i < debts.length; i++) {
+            if (debts[i].debtor == msg.sender) {
+                assertEq(true, debts[i].paid);
+                assertEq(debts[i].creditor, address(this));
+                assertEq(debts[i].amount, testAmount);
+                break;
+            }
+        }
     }
 }
