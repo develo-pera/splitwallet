@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+
 contract SplitWallet {
     uint256 debtGroupIdCounter;
+    IERC20 ghoToken;
 
     struct Debt {
         uint256 amount;
@@ -17,7 +20,15 @@ contract SplitWallet {
     event CreateDebt(address indexed creditor, address indexed debtor, uint256 amount);
     event CreateDebtGroup(uint256 indexed groupId, address indexed creditor, address[] indexed debtors, uint256 amount);
 
-    function getGroupDebts(uint256 groupId) public view returns (Debt[] memory) {
+    constructor(address _ghoToken) {
+        ghoToken = IERC20(_ghoToken);
+    }
+
+    function getTotalSupply() public view returns (uint256) {
+        return ghoToken.totalSupply();
+    }
+
+    function getDebtsGroup(uint256 groupId) public view returns (Debt[] memory) {
         return debtsGroup[groupId];
     }
 
@@ -26,17 +37,17 @@ contract SplitWallet {
         emit CreateDebt(msg.sender, debtor, amount);
     }
 
-    function createDebtGroup(address[] memory debtors, uint256 amount) public returns (uint256 debtsGroupId) {
+    function createDebtGroup(address[] memory debtors, uint256 totalAmount) public returns (uint256 debtsGroupId) {
         uint256 newGroupId = debtGroupIdCounter;
         for (uint256 i = 0; i < debtors.length; i++) {
-            addDebtToGroup(newGroupId, debtors[i], amount);
+            addDebtToGroup(newGroupId, debtors[i], totalAmount);
         }
 
-        emit CreateDebtGroup(newGroupId, msg.sender, debtors, amount);
+        emit CreateDebtGroup(newGroupId, msg.sender, debtors, totalAmount);
 
         debtGroupIdCounter++;
 
-        return (newGroupId);
+        return newGroupId;
     }
 
     // Loop through all debts in the group, find msg.sender eq debtor, and mark it as paid.
@@ -51,6 +62,7 @@ contract SplitWallet {
                 return;
             }
         }
+        
         revert("No debt found for this debtor");
     }
 }
